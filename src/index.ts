@@ -10,6 +10,7 @@ import alertsRouter from "./api/v1/alerts.routes";
 import { startPersistenceWorker } from "./workers/persistence.worker";
 import { startBroadcastWorker } from "./workers/broadcast.worker";
 import { initWebSocketServer } from "./ws/socketServer";
+import authRouter from "./api/v1/auth.routes";
 
 const app = express();
 
@@ -39,6 +40,7 @@ app.get("/debug/alerts", async (req, res) => {
 });
 
 app.use("/api/v1/alerts", alertsRouter);
+app.use("/api/v1/auth", authRouter);
 
 const server = http.createServer(app);
 

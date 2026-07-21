@@ -3,10 +3,13 @@ import { createAlertSchema } from "../../schemas/alert.schema";
 import { publishEvent } from "../../services/rabbitmq.service";
 import { redisClient } from "../../services/redis.service";
 import { randomUUID } from "crypto";
+import { nearbyAlertsSchema } from "../../schemas/geo.schema";
+import { AlertModel } from "../../models/alert.model";
+import { requireAuth, AuthenticatedRequest } from "../../core/authMiddleware";
 
 const router = Router();
 
-router.post("/", async (req: Request, res: Response) => {
+router.post("/", requireAuth, async (req: AuthenticatedRequest, res: Response) => {
   const parseResult = createAlertSchema.safeParse(req.body);
 
   if (!parseResult.success) {
@@ -36,7 +39,7 @@ router.post("/", async (req: Request, res: Response) => {
       type: "Point",
       coordinates: [input.longitude, input.latitude],
     },
-    reportedBy: input.reportedBy,
+    reportedBy: req.user!.username,
     createdAt: new Date().toISOString(),
   };
 
@@ -46,6 +49,38 @@ router.post("/", async (req: Request, res: Response) => {
   return res.status(202).json({
     message: "Alert accepted for processing",
     alertId,
+  });
+});
+
+router.get("/nearby", async (req: Request, res: Response) => {
+  const parseResult = nearbyAlertsSchema.safeParse(req.query);
+
+  if (!parseResult.success) {
+    return res.status(400).json({
+      error: "Validation failed",
+      details: parseResult.error.flatten(),
+    });
+  }
+
+  const { longitude, latitude, radiusKm } = parseResult.data;
+  const radiusInMeters = radiusKm * 1000;
+
+  const alerts = await AlertModel.find({
+    location: {
+      $near: {
+        $geometry: {
+          type: "Point",
+          coordinates: [longitude, latitude],
+        },
+        $maxDistance: radiusInMeters,
+      },
+    },
+  }).limit(50);
+
+  return res.json({
+    count: alerts.length,
+    radiusKm,
+    alerts,
   });
 });
 
