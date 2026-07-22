@@ -11,6 +11,7 @@ import { startPersistenceWorker } from "./workers/persistence.worker";
 import { startBroadcastWorker } from "./workers/broadcast.worker";
 import { initWebSocketServer } from "./ws/socketServer";
 import authRouter from "./api/v1/auth.routes";
+import geoRouter from "./api/v1/geo.routes";
 
 const app = express();
 
@@ -41,6 +42,7 @@ app.get("/debug/alerts", async (req, res) => {
 
 app.use("/api/v1/alerts", alertsRouter);
 app.use("/api/v1/auth", authRouter);
+app.use("/api/v1/geo", geoRouter);
 
 const server = http.createServer(app);
 
