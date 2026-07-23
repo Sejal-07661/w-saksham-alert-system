@@ -1,4 +1,4 @@
-import { getChannel, EXCHANGE_NAME } from "../services/rabbitmq.service";
+import { getChannel, EXCHANGE_NAME, assertQueueWithDLQ } from "../services/rabbitmq.service";
 import { AlertModel } from "../models/alert.model";
 
 const QUEUE_NAME = "persistence_queue";
@@ -7,10 +7,10 @@ const ROUTING_KEY = "alert.created";
 export async function startPersistenceWorker(): Promise<void> {
   const channel = getChannel();
 
-  await channel.assertQueue(QUEUE_NAME, { durable: true });
+  await assertQueueWithDLQ(QUEUE_NAME);
   await channel.bindQueue(QUEUE_NAME, EXCHANGE_NAME, ROUTING_KEY);
 
-  channel.prefetch(1); // process one message at a time per worker instance
+  channel.prefetch(1);
 
   console.log(`Persistence worker listening on queue: ${QUEUE_NAME}`);
 
@@ -32,10 +32,8 @@ export async function startPersistenceWorker(): Promise<void> {
       console.log(`Persisted alert ${payload.alertId} to MongoDB`);
       channel.ack(msg);
     } catch (err) {
-      console.error("Failed to persist alert:", err);
-      // requeue = false sends it to a dead-letter queue if configured later;
-      // for now, false means don't retry infinitely on bad data
-      channel.nack(msg, false, false);
+      console.error("Failed to persist alert. Routing to dead-letter queue:", err);
+      channel.nack(msg, false, false); // false, false = don't requeue → goes to DLX automatically
     }
   });
 }

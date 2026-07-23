@@ -53,6 +53,20 @@ app.get("/debug/alerts", async (req, res) => {
   res.json(alerts);
 });
 
+app.get("/debug/dead-letters", async (req, res) => {
+  const { getChannel, DLQ_NAME } = await import("./services/rabbitmq.service");
+  const channel = getChannel();
+
+  const messages: any[] = [];
+  let msg;
+  while ((msg = await channel.get(DLQ_NAME, { noAck: false }))) {
+    messages.push(JSON.parse(msg.content.toString()));
+    channel.ack(msg); // ack after reading so it's removed from queue (like "viewing" the DLQ)
+  }
+
+  res.json({ count: messages.length, messages });
+});
+
 app.use("/api/v1/alerts", alertsRouter);
 app.use("/api/v1/auth", authRouter);
 app.use("/api/v1/geo", geoRouter);
