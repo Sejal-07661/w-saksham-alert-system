@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>W-Saksham — Live Alert Map</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    body { margin: 0; font-family: system-ui, sans-serif; }
+    #map { height: 100vh; width: 100%; }
+    .alert-popup h3 { margin: 0 0 4px; }
+    .severity-critical { color: #b00020; font-weight: bold; }
+    .severity-high { color: #e65100; font-weight: bold; }
+    .severity-medium { color: #f9a825; font-weight: bold; }
+    .severity-low { color: #2e7d32; font-weight: bold; }
+    #status {
+      position: absolute; top: 10px; right: 10px; z-index: 1000;
+      background: white; padding: 6px 12px; border-radius: 6px;
+      font-size: 13px; box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+    }
+  </style>
+</head>
+<body>
+  <div id="status">Connecting...</div>
+  <div id="map"></div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>
+    const map = L.map('map').setView([21.1458, 79.0882], 13); // Nagpur default center
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    const severityColors = {
+      critical: '#b00020',
+      high: '#e65100',
+      medium: '#f9a825',
+      low: '#2e7d32'
+    };
+
+    function addAlertMarker(alert) {
+      const [lng, lat] = alert.location.coordinates;
+      const color = severityColors[alert.severity] || '#555';
+
+      const marker = L.circleMarker([lat, lng], {
+        radius: 10,
+        fillColor: color,
+        color: '#fff',
+        weight: 2,
+        fillOpacity: 0.9
+      }).addTo(map);
+
+      marker.bindPopup(`
+        <div class="alert-popup">
+          <h3>${alert.title}</h3>
+          <p>${alert.description}</p>
+          <p class="severity-${alert.severity}">Severity: ${alert.severity.toUpperCase()}</p>
+          <p><small>Reported by: ${alert.reportedBy}</small></p>
+        </div>
+      `);
+
+      marker.openPopup();
+      map.panTo([lat, lng]);
+    }
+
+    // Load existing alerts on page load
+    fetch('/debug/alerts')
+      .then(res => res.json())
+      .then(alerts => alerts.forEach(addAlertMarker))
+      .catch(err => console.error('Failed to load existing alerts:', err));
+
+    // Connect to live WebSocket feed
+    const statusEl = document.getElementById('status');
+    const socket = new WebSocket(`ws://${window.location.host}`);
+
+    socket.onopen = () => {
+      statusEl.textContent = '🟢 Live';
+    };
+
+    socket.onmessage = (event) => {
+      const alert = JSON.parse(event.data);
+      addAlertMarker(alert);
+    };
+
+    socket.onclose = () => {
+      statusEl.textContent = '🔴 Disconnected';
+    };
+  </script>
+</body>
+</html>

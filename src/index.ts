@@ -12,10 +12,23 @@ import { startBroadcastWorker } from "./workers/broadcast.worker";
 import { initWebSocketServer } from "./ws/socketServer";
 import authRouter from "./api/v1/auth.routes";
 import geoRouter from "./api/v1/geo.routes";
+import path from "path";
 
 const app = express();
 
-app.use(helmet());
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'", "https://unpkg.com", "'unsafe-inline'"],
+        styleSrc: ["'self'", "https://unpkg.com", "'unsafe-inline'"],
+        imgSrc: ["'self'", "data:", "https://*.tile.openstreetmap.org"],
+        connectSrc: ["'self'", "ws://localhost:3000"],
+      },
+    },
+  })
+);
 app.use(cors());
 app.use(express.json());
 
@@ -43,6 +56,7 @@ app.get("/debug/alerts", async (req, res) => {
 app.use("/api/v1/alerts", alertsRouter);
 app.use("/api/v1/auth", authRouter);
 app.use("/api/v1/geo", geoRouter);
+app.use(express.static(path.join(__dirname, "../public")));
 
 const server = http.createServer(app);
 
