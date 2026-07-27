@@ -34,6 +34,7 @@ router.post("/", requireAuth, async (req: AuthenticatedRequest, res: Response) =
     alertId,
     title: input.title,
     description: input.description,
+    category: input.category,
     severity: input.severity,
     location: {
       type: "Point",

@@ -1,11 +1,13 @@
 import mongoose, { Schema, Document } from "mongoose";
-
+ 
 export type AlertStatus = "pending" | "processing" | "escalated" | "resolved";
 export type AlertSeverity = "low" | "medium" | "high" | "critical";
-
+export type AlertCategory = "sos" | "harassment" | "stalking" | "unsafe_area" | "medical" | "other";
+ 
 export interface IAlert extends Document {
   title: string;
   description: string;
+  category: AlertCategory;
   severity: AlertSeverity;
   status: AlertStatus;
   location: {
@@ -16,15 +18,20 @@ export interface IAlert extends Document {
   createdAt: Date;
   updatedAt: Date;
 }
-
+ 
 const alertSchema = new Schema<IAlert>(
   {
     title: { type: String, required: true },
     description: { type: String, required: true },
+    category: {
+      type: String,
+      enum: ["sos", "harassment", "stalking", "unsafe_area", "medical", "other"],
+      default: "sos",
+    },
     severity: {
       type: String,
       enum: ["low", "medium", "high", "critical"],
-      default: "medium",
+      default: "high",
     },
     status: {
       type: String,
@@ -46,7 +53,7 @@ const alertSchema = new Schema<IAlert>(
   },
   { timestamps: true }
 );
-
+ 
 alertSchema.index({ location: "2dsphere" });
-
+ 
 export const AlertModel = mongoose.model<IAlert>("Alert", alertSchema);

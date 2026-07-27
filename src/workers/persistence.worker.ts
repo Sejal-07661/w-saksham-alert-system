@@ -23,6 +23,7 @@ export async function startPersistenceWorker(): Promise<void> {
       await AlertModel.create({
         title: payload.title,
         description: payload.description,
+        category: payload.category,
         severity: payload.severity,
         location: payload.location,
         reportedBy: payload.reportedBy,
