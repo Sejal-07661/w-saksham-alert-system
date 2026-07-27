@@ -33,7 +33,7 @@ app.use(cors());
 app.use(express.json());
 
 app.get("/health", (req, res) => {
-  res.json({ status: "ok", service: "w-saksham-alert-system" });
+  res.json({ status: "ok", service: "w-saksham-alert-system", instance: config.instanceId });
 });
 
 app.get("/health/redis", async (req, res) => {

@@ -10,4 +10,5 @@ export const config = {
   rabbitmqUrl: process.env.RABBITMQ_URL || "amqp://guest:guest@localhost:5672",
   jwtSecret: process.env.JWT_SECRET || "changeme_dev_only",
   googleMapsApiKey: process.env.GOOGLE_MAPS_API_KEY || "",
+  instanceId: process.env.INSTANCE_ID || "local",
 };
