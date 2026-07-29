@@ -13,6 +13,7 @@ import { initWebSocketServer } from "./ws/socketServer";
 import authRouter from "./api/v1/auth.routes";
 import geoRouter from "./api/v1/geo.routes";
 import path from "path";
+import { startRiskAssessmentWorker } from "./workers/riskAssessment.worker";
 
 const app = express();
 
@@ -79,6 +80,7 @@ async function startServer() {
   await connectRabbitMQ();
   await startPersistenceWorker();
   await startBroadcastWorker();
+  await startRiskAssessmentWorker();
   initWebSocketServer(server);
 
   server.listen(config.port, () => {

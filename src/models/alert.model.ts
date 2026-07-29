@@ -1,10 +1,12 @@
 import mongoose, { Schema, Document } from "mongoose";
- 
+
 export type AlertStatus = "pending" | "processing" | "escalated" | "resolved";
 export type AlertSeverity = "low" | "medium" | "high" | "critical";
 export type AlertCategory = "sos" | "harassment" | "stalking" | "unsafe_area" | "medical" | "other";
- 
+export type UrgencyLabel = "low" | "medium" | "high" | "critical";
+
 export interface IAlert extends Document {
+  alertId: string;
   title: string;
   description: string;
   category: AlertCategory;
@@ -12,15 +14,19 @@ export interface IAlert extends Document {
   status: AlertStatus;
   location: {
     type: "Point";
-    coordinates: [number, number]; // [longitude, latitude]
+    coordinates: [number, number];
   };
   reportedBy: string;
+  riskScore?: number;
+  urgencyLabel?: UrgencyLabel;
+  riskReasoning?: string;
   createdAt: Date;
   updatedAt: Date;
 }
- 
+
 const alertSchema = new Schema<IAlert>(
   {
+    alertId: { type: String, required: true, unique: true, index: true },
     title: { type: String, required: true },
     description: { type: String, required: true },
     category: {
@@ -50,10 +56,13 @@ const alertSchema = new Schema<IAlert>(
       },
     },
     reportedBy: { type: String, required: true },
+    riskScore: { type: Number, min: 0, max: 100 },
+    urgencyLabel: { type: String, enum: ["low", "medium", "high", "critical"] },
+    riskReasoning: { type: String },
   },
   { timestamps: true }
 );
- 
+
 alertSchema.index({ location: "2dsphere" });
- 
+
 export const AlertModel = mongoose.model<IAlert>("Alert", alertSchema);

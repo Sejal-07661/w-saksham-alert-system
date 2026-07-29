@@ -11,4 +11,6 @@ export const config = {
   jwtSecret: process.env.JWT_SECRET || "changeme_dev_only",
   googleMapsApiKey: process.env.GOOGLE_MAPS_API_KEY || "",
   instanceId: process.env.INSTANCE_ID || "local",
+  groqApiKey: process.env.GROQ_API_KEY || "",
+  groqModel: process.env.GROQ_MODEL || "llama-3.1-8b-instant",
 };
