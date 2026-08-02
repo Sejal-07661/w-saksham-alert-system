@@ -19,6 +19,8 @@ import { startNotificationWorker } from "./workers/notification.worker";
 
 const app = express();
 
+app.set("trust proxy", 1);
+
 app.use(
   helmet({
     contentSecurityPolicy: {
@@ -32,7 +34,9 @@ app.use(
     },
   })
 );
-app.use(cors());
+app.use(cors({
+  origin: process.env.ALLOWED_ORIGIN || "http://localhost:3000",
+}));
 app.use(express.json());
 
 app.get("/health", (req, res) => {
@@ -77,6 +81,10 @@ app.use("/api/v1/contacts", contactsRouter);
 app.use(express.static(path.join(__dirname, "../public")));
 
 const server = http.createServer(app);
+
+if (config.jwtSecret === "changeme_dev_only") {
+  console.warn("⚠️  WARNING: Using default JWT_SECRET. Set a strong secret via environment variable before deploying.");
+}
 
 async function startServer() {
   await connectMongo();
