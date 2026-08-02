@@ -20,21 +20,30 @@ export async function startPersistenceWorker(): Promise<void> {
     try {
       const payload = JSON.parse(msg.content.toString());
 
-      await AlertModel.create({
-        title: payload.title,
-        description: payload.description,
-        category: payload.category,
-        severity: payload.severity,
-        location: payload.location,
-        reportedBy: payload.reportedBy,
-        status: "pending",
-      });
+      await AlertModel.findOneAndUpdate(
+        { alertId: payload.alertId },
+        {
+          $set: {
+            title: payload.title,
+            description: payload.description,
+            category: payload.category,
+            severity: payload.severity,
+            location: payload.location,
+            reportedBy: payload.reportedBy,
+          },
+          $setOnInsert: {
+            alertId: payload.alertId,
+            status: "pending",
+          },
+        },
+        { upsert: true }
+      );
 
       console.log(`Persisted alert ${payload.alertId} to MongoDB`);
       channel.ack(msg);
     } catch (err) {
       console.error("Failed to persist alert. Routing to dead-letter queue:", err);
-      channel.nack(msg, false, false); // false, false = don't requeue → goes to DLX automatically
+      channel.nack(msg, false, false);
     }
   });
 }
