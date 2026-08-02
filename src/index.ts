@@ -14,6 +14,8 @@ import authRouter from "./api/v1/auth.routes";
 import geoRouter from "./api/v1/geo.routes";
 import path from "path";
 import { startRiskAssessmentWorker } from "./workers/riskAssessment.worker";
+import contactsRouter from "./api/v1/contacts.routes";
+import { startNotificationWorker } from "./workers/notification.worker";
 
 const app = express();
 
@@ -71,6 +73,7 @@ app.get("/debug/dead-letters", async (req, res) => {
 app.use("/api/v1/alerts", alertsRouter);
 app.use("/api/v1/auth", authRouter);
 app.use("/api/v1/geo", geoRouter);
+app.use("/api/v1/contacts", contactsRouter);
 app.use(express.static(path.join(__dirname, "../public")));
 
 const server = http.createServer(app);
@@ -81,6 +84,7 @@ async function startServer() {
   await startPersistenceWorker();
   await startBroadcastWorker();
   await startRiskAssessmentWorker();
+  await startNotificationWorker();
   initWebSocketServer(server);
 
   server.listen(config.port, () => {

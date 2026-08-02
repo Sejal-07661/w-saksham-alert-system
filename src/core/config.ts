@@ -13,4 +13,6 @@ export const config = {
   instanceId: process.env.INSTANCE_ID || "local",
   groqApiKey: process.env.GROQ_API_KEY || "",
   groqModel: process.env.GROQ_MODEL || "llama-3.1-8b-instant",
+  gmailUser: process.env.GMAIL_USER || "",
+  gmailAppPassword: process.env.GMAIL_APP_PASSWORD || "",
 };
