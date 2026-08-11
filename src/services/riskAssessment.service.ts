@@ -27,7 +27,8 @@ Scoring guidance:
 - Reports of unsafe areas (poor lighting, isolated, no immediate threat described) should score 20-50.
 - A high count of nearby recent alerts (a "hotspot") should push the score up, since it indicates a pattern of risk in that location.
 - Medical emergencies should score 70-100 depending on severity language.
-Be decisive. Never return a score of exactly 0 or refuse to answer — always produce your best assessment.`;
+Be decisive. Never return a score of exactly 0 or refuse to answer — always produce your best assessment.
+- Route deviation alerts (a user has drifted off their planned path or gone silent mid-journey) should score 65-90, since unexplained deviation during a tracked journey is itself a strong risk signal.`;
  
 // Fallback used only if the Groq API call fails (network issue, rate limit, etc.)
 // — ingestion and persistence must never be blocked by an AI provider outage.
@@ -35,6 +36,7 @@ function fallbackAssessment(input: RiskAssessmentInput): RiskAssessmentResult {
   const categoryBase: Record<string, number> = {
     sos: 90,
     medical: 80,
+    route_deviation: 75,
     stalking: 65,
     harassment: 55,
     unsafe_area: 35,

@@ -2,7 +2,7 @@ import mongoose, { Schema, Document } from "mongoose";
 
 export type AlertStatus = "pending" | "processing" | "escalated" | "resolved";
 export type AlertSeverity = "low" | "medium" | "high" | "critical";
-export type AlertCategory = "sos" | "harassment" | "stalking" | "unsafe_area" | "medical" | "other";
+export type AlertCategory = "sos" | "harassment" | "stalking" | "unsafe_area" | "medical" | "route_deviation" | "other";
 export type UrgencyLabel = "low" | "medium" | "high" | "critical";
 
 export interface IAlert extends Document {
@@ -31,9 +31,9 @@ const alertSchema = new Schema<IAlert>(
     description: { type: String, required: true },
     category: {
       type: String,
-      enum: ["sos", "harassment", "stalking", "unsafe_area", "medical", "other"],
+      enum: ["sos", "harassment", "stalking", "unsafe_area", "medical", "route_deviation", "other"],
       default: "sos",
-    },
+},
     severity: {
       type: String,
       enum: ["low", "medium", "high", "critical"],
