@@ -1,61 +1,128 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>W-Saksham — Live Alert Map</title>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <style>
-    body { margin: 0; font-family: system-ui, sans-serif; }
-    #map { height: 100vh; width: 100%; }
-    .alert-popup h3 { margin: 0 0 4px; }
-    .severity-critical { color: #b00020; font-weight: bold; }
-    .severity-high { color: #e65100; font-weight: bold; }
-    .severity-medium { color: #f9a825; font-weight: bold; }
-    .severity-low { color: #2e7d32; font-weight: bold; }
-    #status {
-      position: absolute; top: 10px; right: 10px; z-index: 1000;
-      background: white; padding: 6px 12px; border-radius: 6px;
-      font-size: 13px; box-shadow: 0 1px 4px rgba(0,0,0,0.3);
-    }
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>W-Saksham — Live map</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<link rel="stylesheet" href="/style.css" />
+<style>
+  html, body { height: 100%; }
+  body { overflow: hidden; }
+  #map { height: 100vh; width: 100%; background: var(--bg-base); }
+
+  #status {
+    position: absolute; top: 12px; right: 12px; z-index: 1000;
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    padding: 7px 12px;
+    border-radius: 20px;
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.4);
+  }
+
+  #legend {
+    position: absolute; bottom: 16px; left: 12px; z-index: 1000;
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 10px 14px;
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    color: var(--text-muted);
+    display: flex;
+    gap: 14px;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.4);
+  }
+  #legend .item { display: flex; align-items: center; gap: 6px; }
+  #legend .dot { width: 8px; height: 8px; border-radius: 50%; }
+
+  /* Leaflet popup restyle to match the console */
+  .leaflet-popup-content-wrapper {
+    background: var(--bg-panel);
+    color: var(--text-primary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+  }
+  .leaflet-popup-tip { background: var(--bg-panel); border: 1px solid var(--border); }
+  .leaflet-popup-content { margin: 12px 14px; font-family: var(--font-display); }
+  .alert-popup h3 { font-size: 13.5px; margin: 0 0 4px; }
+  .alert-popup p { font-size: 12px; margin: 0 0 6px; color: var(--text-muted); line-height: 1.5; }
+  .alert-popup .sev { font-family: var(--font-mono); font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700; }
+  .alert-popup small { color: var(--text-faint); font-size: 10.5px; }
+  .leaflet-control-zoom a {
+    background: var(--bg-panel) !important;
+    color: var(--text-primary) !important;
+    border-color: var(--border) !important;
+  }
+  .leaflet-control-attribution {
+    background: rgba(26,30,34,0.85) !important;
+    color: var(--text-faint) !important;
+  }
+  .leaflet-control-attribution a { color: var(--text-muted) !important; }
+</style>
 </head>
-<body>
-  <div id="status">Connecting...</div>
+<body class="console-surface">
+  <div id="status"><span class="pulse-dot" id="status-dot"></span><span id="status-label">Connecting…</span></div>
+  <div id="legend">
+    <div class="item"><span class="dot" style="background:#E85D42;"></span>Critical</div>
+    <div class="item"><span class="dot" style="background:#DB7F35;"></span>High</div>
+    <div class="item"><span class="dot" style="background:#C79A3D;"></span>Medium</div>
+    <div class="item"><span class="dot" style="background:#2FB88F;"></span>Low</div>
+  </div>
   <div id="map"></div>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
-    const map = L.map('map').setView([21.1458, 79.0882], 13); // Nagpur default center
+    const map = L.map('map', { zoomControl: true, attributionControl: true }).setView([21.1458, 79.0882], 13); // Nagpur default center
 
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; OpenStreetMap contributors'
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+      attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
+      subdomains: 'abcd',
+      maxZoom: 19
     }).addTo(map);
 
     const severityColors = {
-      critical: '#b00020',
-      high: '#e65100',
-      medium: '#f9a825',
-      low: '#2e7d32'
+      critical: '#E85D42',
+      high: '#DB7F35',
+      medium: '#C79A3D',
+      low: '#2FB88F'
     };
 
     function addAlertMarker(alert) {
       const [lng, lat] = alert.location.coordinates;
-      const color = severityColors[alert.severity] || '#555';
+      const color = severityColors[alert.severity] || '#8B9198';
 
       const marker = L.circleMarker([lat, lng], {
-        radius: 10,
+        radius: 9,
         fillColor: color,
-        color: '#fff',
+        color: '#101316',
         weight: 2,
-        fillOpacity: 0.9
+        fillOpacity: 0.95
       }).addTo(map);
+
+      // Soft glow ring for critical alerts — the one spot of drama, reserved
+      // for the severity level where it actually matters.
+      if (alert.severity === 'critical') {
+        L.circleMarker([lat, lng], {
+          radius: 18,
+          fillColor: color,
+          color: 'transparent',
+          fillOpacity: 0.18
+        }).addTo(map);
+      }
 
       marker.bindPopup(`
         <div class="alert-popup">
-          <h3>${alert.title}</h3>
-          <p>${alert.description}</p>
-          <p class="severity-${alert.severity}">Severity: ${alert.severity.toUpperCase()}</p>
-          <p><small>Reported by: ${alert.reportedBy}</small></p>
+          <h3>${escapeHtml(alert.title)}</h3>
+          <p>${escapeHtml(alert.description)}</p>
+          <p class="sev" style="color:${color};">${alert.severity.toUpperCase()}</p>
+          <small>Reported by ${escapeHtml(alert.reportedBy)}</small>
         </div>
       `);
 
@@ -63,28 +130,24 @@
       map.panTo([lat, lng]);
     }
 
-    // Load existing alerts on page load
+    function escapeHtml(str) {
+      const div = document.createElement('div');
+      div.textContent = str || '';
+      return div.innerHTML;
+    }
+
     fetch('/debug/alerts')
       .then(res => res.json())
       .then(alerts => alerts.forEach(addAlertMarker))
       .catch(err => console.error('Failed to load existing alerts:', err));
 
-    // Connect to live WebSocket feed
-    const statusEl = document.getElementById('status');
+    const dot = document.getElementById('status-dot');
+    const label = document.getElementById('status-label');
     const socket = new WebSocket(`ws://${window.location.host}`);
 
-    socket.onopen = () => {
-      statusEl.textContent = '🟢 Live';
-    };
-
-    socket.onmessage = (event) => {
-      const alert = JSON.parse(event.data);
-      addAlertMarker(alert);
-    };
-
-    socket.onclose = () => {
-      statusEl.textContent = '🔴 Disconnected';
-    };
+    socket.onopen = () => { dot.classList.add('live'); label.textContent = 'Live'; };
+    socket.onmessage = (event) => addAlertMarker(JSON.parse(event.data));
+    socket.onclose = () => { dot.classList.remove('live'); label.textContent = 'Disconnected'; };
   </script>
 </body>
 </html>

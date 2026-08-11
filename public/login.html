@@ -4,184 +4,247 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>W-Saksham — Sign in</title>
+<link rel="stylesheet" href="/style.css" />
 <style>
-  * { box-sizing: border-box; }
   body {
-    margin: 0;
+    display: flex;
     min-height: 100vh;
-    background: #14171A;
-    color: #E8E6E1;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+
+  .side {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 60px 72px;
+    position: relative;
+    overflow: hidden;
+    border-right: 1px solid var(--border);
+  }
+  .side::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(circle at 20% 20%, rgba(47,184,143,0.10), transparent 50%),
+      radial-gradient(circle at 80% 80%, rgba(232,93,66,0.07), transparent 50%);
+    pointer-events: none;
+  }
+  .side-content { position: relative; max-width: 420px; }
+  .wordmark {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 40px;
+  }
+  .wordmark .mark {
+    width: 26px; height: 26px;
+    border-radius: 6px;
+    background: var(--signal-safe);
+    display: flex; align-items: center; justify-content: center;
+    color: #06231A; font-weight: 800; font-size: 13px;
+  }
+  .side h1 { font-size: 34px; line-height: 1.2; margin-bottom: 18px; }
+  .side .lede { font-size: 15px; margin-bottom: 36px; }
+
+  .stat-row { display: flex; gap: 28px; }
+  .stat .num { font-family: var(--font-mono); font-size: 22px; font-weight: 700; color: var(--text-primary); }
+  .stat .lbl { font-size: 11px; color: var(--text-faint); text-transform: uppercase; letter-spacing: 0.06em; margin-top: 2px; }
+
+  .console-lines {
+    margin-top: 48px;
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    color: var(--text-faint);
+    line-height: 2.1;
+    border-top: 1px solid var(--border-soft);
+    padding-top: 20px;
+  }
+  .console-lines .ok { color: var(--signal-safe); }
+
+  .form-side {
+    width: 460px;
+    flex-shrink: 0;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 24px;
+    padding: 40px;
   }
-  .panel {
-    width: 100%;
-    max-width: 380px;
-    background: #1E2226;
-    border: 1px solid #2A2F34;
-    border-radius: 10px;
-    padding: 32px;
-  }
-  .eyebrow {
-    font-family: ui-monospace, Menlo, monospace;
-    font-size: 12px;
-    letter-spacing: 0.08em;
-    color: #2FA98C;
-    text-transform: uppercase;
-    margin: 0 0 6px;
-  }
-  h1 {
-    font-size: 20px;
-    font-weight: 600;
-    margin: 0 0 24px;
-    color: #E8E6E1;
-  }
+  .auth-card { width: 100%; max-width: 340px; }
+  .auth-card h1 { font-size: 21px; margin-bottom: 6px; }
+  .auth-card .sub { font-size: 13px; margin-bottom: 26px; }
+
   .tabs {
     display: flex;
-    gap: 4px;
-    margin-bottom: 20px;
-    background: #14171A;
-    border-radius: 8px;
-    padding: 4px;
+    gap: 3px;
+    margin-bottom: 24px;
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 3px;
   }
   .tab {
     flex: 1;
     text-align: center;
-    padding: 8px 0;
-    border-radius: 6px;
+    padding: 9px 0;
+    border-radius: 5px;
     font-size: 13px;
+    font-weight: 500;
     cursor: pointer;
-    color: #8A8F94;
+    color: var(--text-muted);
     transition: background 0.15s, color 0.15s;
+    user-select: none;
   }
-  .tab.active {
-    background: #2A2F34;
-    color: #E8E6E1;
-  }
-  label {
-    display: block;
-    font-size: 12px;
-    color: #8A8F94;
-    margin-bottom: 6px;
-    margin-top: 14px;
-  }
-  input {
-    width: 100%;
-    padding: 10px 12px;
-    background: #14171A;
-    border: 1px solid #2A2F34;
-    border-radius: 6px;
-    color: #E8E6E1;
-    font-size: 14px;
-    outline: none;
-  }
-  input:focus {
-    border-color: #2FA98C;
-  }
-  button.submit {
-    width: 100%;
-    margin-top: 22px;
-    padding: 11px 0;
-    background: #2FA98C;
-    color: #0B1210;
-    font-weight: 600;
-    font-size: 14px;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-  }
-  button.submit:hover { background: #38C2A2; }
+  .tab.active { background: var(--bg-panel-alt); color: var(--text-primary); }
+
+  .field { margin-bottom: 16px; }
+
   .msg {
-    margin-top: 14px;
+    margin-top: 16px;
     font-size: 13px;
     padding: 10px 12px;
-    border-radius: 6px;
+    border-radius: var(--radius-sm);
     display: none;
+    line-height: 1.5;
   }
-  .msg.error { display: block; background: rgba(232,89,60,0.12); color: #E8593C; }
-  .msg.ok { display: block; background: rgba(47,169,140,0.12); color: #2FA98C; }
+  .msg.error { display: block; background: var(--signal-critical-dim); color: var(--signal-critical); }
+  .msg.ok { display: block; background: var(--signal-safe-dim); color: var(--signal-safe); }
+
+  .fine-print {
+    margin-top: 28px;
+    font-size: 11.5px;
+    color: var(--text-faint);
+    line-height: 1.6;
+    text-align: center;
+  }
+
+  @media (max-width: 860px) {
+    body { flex-direction: column; }
+    .side { border-right: none; border-bottom: 1px solid var(--border); padding: 40px 28px; }
+    .form-side { width: 100%; padding: 40px 28px; }
+    .console-lines { display: none; }
+  }
 </style>
 </head>
-<body>
-  <div class="panel">
-    <p class="eyebrow">W-Saksham — women's safety</p>
-    <h1>Sign in to send an SOS</h1>
+<body class="console-surface">
 
-    <div class="tabs">
-      <div class="tab active" id="tab-login">Sign in</div>
-      <div class="tab" id="tab-register">Create account</div>
+  <div class="side">
+    <div class="side-content">
+      <div class="wordmark"><span class="mark">W</span> W-Saksham Dispatch</div>
+      <h1>One button. A route watched end to end. Someone always notified.</h1>
+      <p class="lede">An event-driven safety network — live location, AI-scored risk, and a trusted-contact chain, all running from the moment you leave.</p>
+
+      <div class="stat-row">
+        <div class="stat"><div class="num">&lt;2s</div><div class="lbl">Alert to broadcast</div></div>
+        <div class="stat"><div class="num">3-stage</div><div class="lbl">Escalation chain</div></div>
+        <div class="stat"><div class="num">24/7</div><div class="lbl">Route monitoring</div></div>
+      </div>
+
+      <div class="console-lines">
+        <div><span class="ok">●</span> risk-assessment-worker&nbsp;&nbsp;listening</div>
+        <div><span class="ok">●</span> broadcast-worker&nbsp;&nbsp;3 instances bound</div>
+        <div><span class="ok">●</span> notification-worker&nbsp;&nbsp;idle</div>
+      </div>
     </div>
-
-    <form id="form">
-      <label for="username">Username</label>
-      <input id="username" type="text" autocomplete="username" required />
-      <label for="password">Password</label>
-      <input id="password" type="password" autocomplete="current-password" required />
-      <button class="submit" type="submit" id="submit-btn">Sign in</button>
-    </form>
-
-    <div class="msg" id="msg"></div>
   </div>
 
-  <script>
-    let mode = 'login';
+  <div class="form-side">
+    <div class="auth-card">
+      <h1 id="form-title">Sign in</h1>
+      <p class="sub" id="form-sub">Access your dispatch console.</p>
 
-    function switchTab(next) {
-      mode = next;
-      document.getElementById('tab-login').classList.toggle('active', next === 'login');
-      document.getElementById('tab-register').classList.toggle('active', next === 'register');
-      document.getElementById('submit-btn').textContent = next === 'login' ? 'Sign in' : 'Create account';
-      document.getElementById('msg').className = 'msg';
-    }
+      <div class="tabs">
+        <div class="tab active" id="tab-login">Sign in</div>
+        <div class="tab" id="tab-register">Create account</div>
+      </div>
 
-    document.getElementById('tab-login').addEventListener('click', () => switchTab('login'));
-    document.getElementById('tab-register').addEventListener('click', () => switchTab('register'));
+      <form id="form">
+        <div class="field">
+          <label for="username">Username</label>
+          <input id="username" type="text" autocomplete="username" required />
+        </div>
+        <div class="field">
+          <label for="password">Password</label>
+          <input id="password" type="password" autocomplete="current-password" required />
+        </div>
+        <button class="btn btn-primary btn-block" type="submit" id="submit-btn">Sign in</button>
+      </form>
 
-    document.getElementById('form').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const username = document.getElementById('username').value.trim();
-      const password = document.getElementById('password').value;
-      const msg = document.getElementById('msg');
-      msg.className = 'msg';
+      <div class="msg" id="msg"></div>
 
-      const endpoint = mode === 'login' ? '/api/v1/auth/login' : '/api/v1/auth/register';
+      <p class="fine-print">Your location is only shared when you trigger an alert or start a tracked journey — never in the background.</p>
+    </div>
+  </div>
 
-      try {
-        const res = await fetch(endpoint, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username, password })
-        });
-        const data = await res.json();
+<script>
+  let mode = 'login';
 
-        if (!res.ok) {
-          let text = data.error || 'Something went wrong';
-          if (data.details) {
-            const fieldErrors = data.details.fieldErrors || {};
-            const formErrors = data.details.formErrors || [];
-            const parts = [];
-            for (const key in fieldErrors) {
-              if (fieldErrors[key] && fieldErrors[key].length) parts.push(`${key}: ${fieldErrors[key][0]}`);
-            }
-            if (formErrors.length) parts.push(...formErrors);
-            if (parts.length) text = parts.join(' — ');
+  function switchTab(next) {
+    mode = next;
+    document.getElementById('tab-login').classList.toggle('active', next === 'login');
+    document.getElementById('tab-register').classList.toggle('active', next === 'register');
+    document.getElementById('submit-btn').textContent = next === 'login' ? 'Sign in' : 'Create account';
+    document.getElementById('form-title').textContent = next === 'login' ? 'Sign in' : 'Create account';
+    document.getElementById('form-sub').textContent = next === 'login'
+      ? 'Access your dispatch console.'
+      : 'Set up trusted contacts once you\'re in.';
+    document.getElementById('msg').className = 'msg';
+  }
+
+  document.getElementById('tab-login').addEventListener('click', () => switchTab('login'));
+  document.getElementById('tab-register').addEventListener('click', () => switchTab('register'));
+
+  document.getElementById('form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const username = document.getElementById('username').value.trim();
+    const password = document.getElementById('password').value;
+    const msg = document.getElementById('msg');
+    const btn = document.getElementById('submit-btn');
+    msg.className = 'msg';
+    btn.disabled = true;
+
+    const endpoint = mode === 'login' ? '/api/v1/auth/login' : '/api/v1/auth/register';
+
+    try {
+      const res = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        let text = data.error || 'Something went wrong';
+        if (data.details) {
+          const fieldErrors = data.details.fieldErrors || {};
+          const formErrors = data.details.formErrors || [];
+          const parts = [];
+          for (const key in fieldErrors) {
+            if (fieldErrors[key] && fieldErrors[key].length) parts.push(`${key}: ${fieldErrors[key][0]}`);
           }
-          msg.textContent = text;
-          msg.className = 'msg error';
-          return;
+          if (formErrors.length) parts.push(...formErrors);
+          if (parts.length) text = parts.join(' — ');
         }
-
-        sessionStorage.setItem('wsaksham_token', data.token);
-        sessionStorage.setItem('wsaksham_username', username);
-        window.location.href = '/dashboard.html';
-      } catch (err) {
-        msg.textContent = 'Could not reach the server';
+        msg.textContent = text;
         msg.className = 'msg error';
+        btn.disabled = false;
+        return;
       }
-    });
-  </script>
+
+      sessionStorage.setItem('wsaksham_token', data.token);
+      sessionStorage.setItem('wsaksham_username', username);
+      window.location.href = '/dashboard.html';
+    } catch (err) {
+      msg.textContent = 'Could not reach the server.';
+      msg.className = 'msg error';
+      btn.disabled = false;
+    }
+  });
+</script>
 </body>
 </html>

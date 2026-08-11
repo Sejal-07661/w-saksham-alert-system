@@ -4,216 +4,319 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>W-Saksham — Dispatch console</title>
+<link rel="stylesheet" href="/style.css" />
 <style>
-  * { box-sizing: border-box; }
-  body {
-    margin: 0;
-    background: #14171A;
-    color: #E8E6E1;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    min-height: 100vh;
-  }
   header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 14px 24px;
-    border-bottom: 1px solid #2A2F34;
-    background: #1E2226;
+    padding: 14px 28px;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg-panel);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    gap: 12px;
   }
-  .brand { display: flex; align-items: center; gap: 10px; }
-  .brand-name { font-size: 15px; font-weight: 600; }
-  .status { display: flex; align-items: center; gap: 8px; font-family: ui-monospace, Menlo, monospace; font-size: 12px; color: #8A8F94; }
-  .dot { width: 8px; height: 8px; border-radius: 50%; background: #E8593C; }
-  .dot.live { background: #2FA98C; animation: pulse 1.6s ease-in-out infinite; }
-  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.35; } }
-  .user-info { font-size: 13px; color: #8A8F94; display: flex; align-items: center; gap: 12px; }
-  .signout { color: #E8593C; cursor: pointer; font-size: 13px; }
-
-  main {
-    max-width: 1120px;
-    margin: 0 auto;
-    padding: 24px;
-    display: grid;
-    grid-template-columns: 340px 1fr;
-    gap: 20px;
-  }
-  @media (max-width: 800px) { main { grid-template-columns: 1fr; } }
-
-  .panel {
-    background: #1E2226;
-    border: 1px solid #2A2F34;
-    border-radius: 10px;
-    padding: 20px;
-  }
-  .panel h2 {
-    font-size: 13px;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    color: #8A8F94;
-    margin: 0 0 16px;
-    font-weight: 600;
-  }
-  label { display: block; font-size: 12px; color: #8A8F94; margin: 12px 0 6px; }
-  label:first-of-type { margin-top: 0; }
-  input, textarea, select {
-    width: 100%;
-    padding: 9px 11px;
-    background: #14171A;
-    border: 1px solid #2A2F34;
-    border-radius: 6px;
-    color: #E8E6E1;
-    font-size: 13px;
-    outline: none;
-    font-family: inherit;
-  }
-  textarea { resize: vertical; min-height: 60px; }
-  input:focus, textarea:focus, select:focus { border-color: #2FA98C; }
-  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-  .sos-copy { font-size: 12px; color: #8A8F94; margin: 0 0 14px; line-height: 1.5; }
-  .sos-btn {
-    width: 100%;
-    padding: 18px 0;
-    background: #E8593C;
-    color: #1A0B08;
-    font-weight: 600;
+  .menu-btn {
+    display: none;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    width: 34px; height: 34px;
+    color: var(--text-primary);
+    cursor: pointer;
     font-size: 16px;
-    letter-spacing: 0.02em;
+    align-items: center;
+    justify-content: center;
+  }
+  .header-collapse {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  @media (max-width: 640px) {
+    header { padding: 12px 16px; }
+    .menu-btn { display: flex; }
+    .status .mono-label { display: none; }
+    .header-collapse {
+      position: absolute;
+      top: 58px; left: 0; right: 0;
+      background: var(--bg-panel);
+      border-bottom: 1px solid var(--border);
+      flex-direction: column;
+      align-items: stretch;
+      padding: 14px 16px;
+      gap: 12px;
+      display: none;
+    }
+    .header-collapse.open { display: flex; }
+    .user-info { justify-content: space-between; width: 100%; }
+  }
+
+  /* Floating mobile SOS shortcut — the SOS panel is far down the stack on
+     small screens, so keep the primary action reachable without scrolling. */
+  .mobile-sos-fab {
+    display: none;
+    position: fixed;
+    bottom: 18px; right: 18px;
+    z-index: 500;
+    width: 58px; height: 58px;
+    border-radius: 50%;
+    background: var(--signal-critical);
+    color: #2A0B04;
     border: none;
-    border-radius: 8px;
+    font-weight: 800;
+    font-size: 11px;
+    letter-spacing: 0.02em;
+    box-shadow: 0 8px 24px rgba(232,93,66,0.4);
     cursor: pointer;
   }
-  .sos-btn:hover { background: #F26A4C; }
-  .sos-btn:disabled { background: #3A3F44; color: #8A8F94; cursor: not-allowed; }
-  .sos-status { font-size: 12px; margin-top: 10px; min-height: 16px; color: #8A8F94; }
-  .sos-status.ok { color: #2FA98C; }
-  .sos-status.error { color: #E8593C; }
+  @media (max-width: 640px) {
+    .mobile-sos-fab { display: flex; align-items: center; justify-content: center; text-align: center; }
+  }
+  .brand { display: flex; align-items: center; gap: 10px; }
+  .brand .mark {
+    width: 26px; height: 26px;
+    border-radius: 6px;
+    background: var(--signal-safe);
+    display: flex; align-items: center; justify-content: center;
+    color: #06231A; font-weight: 800; font-size: 13px;
+  }
+  .brand-name { font-size: 14.5px; font-weight: 700; }
+
+  .status { display: flex; align-items: center; gap: 8px; font-family: var(--font-mono); font-size: 12px; color: var(--text-muted); }
+  .user-info { font-size: 13px; color: var(--text-muted); display: flex; align-items: center; gap: 16px; }
+  .username-pill {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    padding: 3px 10px;
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    color: var(--text-primary);
+  }
+  .signout { color: var(--signal-critical); cursor: pointer; font-size: 13px; font-weight: 500; }
+  .signout:hover { text-decoration: underline; }
+
+  main {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 28px;
+    display: grid;
+    grid-template-columns: 360px 1fr;
+    gap: 20px;
+  }
+  @media (max-width: 980px) { main { grid-template-columns: 320px 1fr; gap: 16px; } }
+  @media (max-width: 860px) { main { grid-template-columns: 1fr; padding: 18px; } }
+  @media (max-width: 640px) { main { padding: 14px; padding-bottom: 90px; gap: 14px; } .panel { padding: 16px; } }
+
+  .panel + .panel { margin-top: 0; }
+  .stack { display: flex; flex-direction: column; gap: 20px; }
+
+  /* --- SOS panel --- */
+  .sos-panel { text-align: left; }
+  .sos-copy { font-size: 12.5px; margin: 8px 0 18px; }
+  .sos-btn {
+    width: 100%;
+    padding: 20px 0;
+    background: var(--signal-critical);
+    color: #2A0B04;
+    font-weight: 700;
+    font-size: 16px;
+    letter-spacing: 0.01em;
+    border: none;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+  }
+  .sos-btn:hover:not(:disabled) { filter: brightness(1.08); }
+  .sos-btn:disabled { background: var(--bg-panel-alt); color: var(--text-faint); cursor: not-allowed; }
+  .sos-status { font-size: 12px; margin-top: 12px; min-height: 16px; color: var(--text-muted); }
+  .sos-status.ok { color: var(--signal-safe); }
+  .sos-status.error { color: var(--signal-critical); }
+
   .divider {
     display: flex;
     align-items: center;
     gap: 10px;
     margin: 24px 0 18px;
-    font-size: 11px;
-    color: #5F6469;
+    font-size: 10.5px;
+    color: var(--text-faint);
     text-transform: uppercase;
-    letter-spacing: 0.04em;
+    letter-spacing: 0.06em;
   }
-  .divider::before, .divider::after {
-    content: "";
-    flex: 1;
-    height: 1px;
-    background: #2A2F34;
-  }
-  button.submit {
-    width: 100%;
-    margin-top: 18px;
-    padding: 10px 0;
-    background: #2FA98C;
-    color: #0B1210;
-    font-weight: 600;
-    font-size: 13px;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-  }
-  button.submit:hover { background: #38C2A2; }
-  button.submit:disabled { background: #3A3F44; color: #8A8F94; cursor: not-allowed; }
+  .divider::before, .divider::after { content: ""; flex: 1; height: 1px; background: var(--border); }
 
-  .feed { max-height: 420px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
-  .alert-row {
-    background: #14171A;
-    border: 1px solid #2A2F34;
-    border-left: 3px solid #8A8F94;
-    border-radius: 6px;
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .field { margin-bottom: 4px; }
+  .field + .field { margin-top: 14px; }
+
+  /* --- Journey panel --- */
+  .journey-idle .field:first-of-type { margin-top: 0; }
+  .journey-active {
+    display: none;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .journey-active.show { display: flex; }
+  .journey-idle.hide { display: none; }
+  .journey-status-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .journey-status-block { display: flex; align-items: center; gap: 10px; }
+  .journey-label { font-weight: 600; font-size: 13.5px; }
+  .journey-meta { font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+  .journey-banner {
+    display: none;
+    background: var(--signal-critical-dim);
+    border: 1px solid rgba(232,93,66,0.35);
+    color: var(--signal-critical);
+    font-size: 12px;
     padding: 10px 12px;
+    border-radius: var(--radius-sm);
+    line-height: 1.5;
   }
-  .alert-row.critical { border-left-color: #E8593C; }
-  .alert-row.high { border-left-color: #D97A2E; }
-  .alert-row.medium { border-left-color: #B8862E; }
-  .alert-row.low { border-left-color: #2FA98C; }
-  .alert-title { font-size: 13px; font-weight: 600; margin-bottom: 2px; }
-  .alert-desc { font-size: 12px; color: #8A8F94; margin-bottom: 6px; }
-  .alert-meta { font-family: ui-monospace, Menlo, monospace; font-size: 11px; color: #5F6469; display: flex; gap: 10px; }
-  .sev-badge {
-    display: inline-block;
-    font-size: 10px;
-    font-family: ui-monospace, Menlo, monospace;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    padding: 1px 6px;
-    border-radius: 4px;
+  .journey-banner.show { display: block; }
+
+  /* --- Feed panel --- */
+  .feed { max-height: 460px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; margin-top: 4px; }
+  .alert-row {
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--text-faint);
+    border-radius: var(--radius-sm);
+    padding: 11px 13px;
   }
-  .sev-badge.critical { background: rgba(232,89,60,0.15); color: #E8593C; }
-  .sev-badge.high { background: rgba(217,122,46,0.15); color: #D97A2E; }
-  .sev-badge.medium { background: rgba(184,134,46,0.15); color: #B8862E; }
-  .sev-badge.low { background: rgba(47,169,140,0.15); color: #2FA98C; }
+  .alert-row.critical { border-left-color: var(--signal-critical); }
+  .alert-row.high { border-left-color: var(--signal-high); }
+  .alert-row.medium { border-left-color: var(--signal-medium); }
+  .alert-row.low { border-left-color: var(--signal-safe); }
+  .alert-title { font-size: 13px; font-weight: 600; margin-bottom: 3px; display: flex; align-items: center; gap: 8px; }
+  .alert-desc { font-size: 12px; color: var(--text-muted); margin-bottom: 8px; line-height: 1.5; }
+  .alert-meta { font-family: var(--font-mono); font-size: 10.5px; color: var(--text-faint); display: flex; gap: 12px; flex-wrap: wrap; }
 
   .map-panel { grid-column: 1 / -1; padding: 0; overflow: hidden; }
-  .map-panel iframe { width: 100%; height: 420px; border: none; display: block; }
-  .empty { font-size: 13px; color: #5F6469; padding: 20px 0; text-align: center; }
+  .map-panel-head {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 20px 0;
+  }
+  .map-panel iframe { width: 100%; height: 440px; border: none; display: block; margin-top: 14px; }
+  @media (max-width: 640px) { .map-panel iframe { height: 320px; } }
+  .empty { font-size: 13px; color: var(--text-faint); padding: 24px 0; text-align: center; }
 </style>
 </head>
-<body>
+<body class="console-surface">
 <header>
   <div class="brand">
-    <div class="brand-name">W-Saksham — Women's Safety Alert System</div>
+    <span class="mark">W</span>
+    <span class="brand-name">W-Saksham Dispatch</span>
   </div>
-  <div class="status">
-    <span class="dot" id="live-dot"></span>
-    <span id="live-label">Connecting…</span>
-  </div>
-  <div class="user-info">
-    <span id="who"></span>
-    <span class="signout" id="signout-btn">Sign out</span>
+  <button class="menu-btn" id="menu-btn" aria-label="Toggle menu" aria-expanded="false">☰</button>
+  <div class="header-collapse" id="header-collapse">
+    <div class="status">
+      <span class="pulse-dot" id="live-dot"></span>
+      <span class="mono-label" id="live-label">Connecting…</span>
+    </div>
+    <div class="user-info">
+      <span class="username-pill" id="who"></span>
+      <span class="signout" id="signout-btn">Sign out</span>
+    </div>
   </div>
 </header>
 
+<button class="mobile-sos-fab" id="mobile-sos-fab" aria-label="Jump to SOS">SOS</button>
+<div class="toast-stack" id="toast-stack" aria-live="polite"></div>
+
 <main>
-  <div class="panel">
-    <h2>Send an SOS</h2>
-    <p class="sos-copy">Shares your location instantly with the dispatch feed and anyone watching the live map.</p>
-    <button class="sos-btn" id="sos-btn">Send SOS now</button>
-    <div class="sos-status" id="sos-status"></div>
+  <div class="stack">
 
-    <div class="divider"><span>or report an incident</span></div>
+    <div class="panel sos-panel">
+      <h2>Send an SOS</h2>
+      <p class="sos-copy">Shares your location instantly with the dispatch feed and the live map. Risk-scored automatically, trusted contacts notified if it escalates.</p>
+      <button class="sos-btn" id="sos-btn">Send SOS now</button>
+      <div class="sos-status" id="sos-status"></div>
+    </div>
 
-    <form id="alert-form">
-      <label for="category">Category</label>
-      <select id="category">
-        <option value="harassment">Harassment</option>
-        <option value="stalking">Stalking</option>
-        <option value="unsafe_area">Unsafe area</option>
-        <option value="medical">Medical emergency</option>
-        <option value="other">Other</option>
-      </select>
-
-      <label for="title">Title</label>
-      <input id="title" required maxlength="200" />
-
-      <label for="description">Description</label>
-      <textarea id="description" required maxlength="2000"></textarea>
-
-      <label for="severity">Severity</label>
-      <select id="severity">
-        <option value="low">Low</option>
-        <option value="medium" selected>Medium</option>
-        <option value="high">High</option>
-        <option value="critical">Critical</option>
-      </select>
-
-      <div class="row2">
-        <div>
-          <label for="lat">Latitude</label>
-          <input id="lat" type="number" step="any" required value="21.1458" />
+    <div class="panel">
+      <h2>Report an incident</h2>
+      <form id="alert-form" style="margin-top:14px;">
+        <div class="field">
+          <label for="category">Category</label>
+          <select id="category">
+            <option value="harassment">Harassment</option>
+            <option value="stalking">Stalking</option>
+            <option value="unsafe_area">Unsafe area</option>
+            <option value="medical">Medical emergency</option>
+            <option value="other">Other</option>
+          </select>
         </div>
-        <div>
-          <label for="lng">Longitude</label>
-          <input id="lng" type="number" step="any" required value="79.0882" />
+        <div class="field">
+          <label for="title">Title</label>
+          <input id="title" required maxlength="200" placeholder="Brief summary" />
         </div>
+        <div class="field">
+          <label for="description">Description</label>
+          <textarea id="description" required maxlength="2000" placeholder="What happened, and where"></textarea>
+        </div>
+        <div class="field">
+          <label for="severity">Severity</label>
+          <select id="severity">
+            <option value="low">Low</option>
+            <option value="medium" selected>Medium</option>
+            <option value="high">High</option>
+            <option value="critical">Critical</option>
+          </select>
+        </div>
+        <div class="field row2">
+          <div>
+            <label for="lat">Latitude</label>
+            <input id="lat" type="number" step="any" required value="21.1458" />
+          </div>
+          <div>
+            <label for="lng">Longitude</label>
+            <input id="lng" type="number" step="any" required value="79.0882" />
+          </div>
+        </div>
+        <button class="btn btn-primary btn-block" type="submit" id="submit-btn" style="margin-top:18px;">Submit report</button>
+      </form>
+    </div>
+
+    <div class="panel">
+      <h2>Journey tracking</h2>
+      <p class="sos-copy">Set a destination and W-Saksham watches your route. Drift off path or go silent, and it escalates automatically.</p>
+
+      <div class="journey-idle" id="journey-idle">
+        <div class="field">
+          <label for="j-dest-lat">Destination latitude</label>
+          <input id="j-dest-lat" type="number" step="any" placeholder="21.1500" />
+        </div>
+        <div class="field">
+          <label for="j-dest-lng">Destination longitude</label>
+          <input id="j-dest-lng" type="number" step="any" placeholder="79.0950" />
+        </div>
+        <div class="field">
+          <label for="j-label">Label (optional)</label>
+          <input id="j-label" type="text" placeholder="Walking home" maxlength="200" />
+        </div>
+        <button class="btn btn-primary btn-block" id="journey-start-btn" style="margin-top:18px;">Start journey</button>
       </div>
 
-      <button class="submit" type="submit" id="submit-btn">Submit report</button>
-    </form>
+      <div class="journey-active" id="journey-active">
+        <div class="journey-status-row">
+          <div class="journey-status-block">
+            <span class="pulse-dot live" id="journey-pulse"></span>
+            <div>
+              <div class="journey-label" id="journey-status-label">Tracking active</div>
+              <div class="journey-meta" id="journey-status-meta">Waiting for first location ping…</div>
+            </div>
+          </div>
+          <button class="btn btn-ghost" id="journey-stop-btn">Stop</button>
+        </div>
+        <div class="journey-banner" id="journey-banner"></div>
+      </div>
+    </div>
+
   </div>
 
   <div class="panel">
@@ -224,6 +327,9 @@
   </div>
 
   <div class="panel map-panel">
+    <div class="map-panel-head">
+      <h2>Live map</h2>
+    </div>
     <iframe src="/map.html" title="Live alert map"></iframe>
   </div>
 </main>
@@ -232,18 +338,47 @@
   const token = sessionStorage.getItem('wsaksham_token');
   const username = sessionStorage.getItem('wsaksham_username');
 
-  if (!token) {
-    window.location.href = '/login.html';
-  }
-  document.getElementById('who').textContent = username;
+  if (!token) window.location.href = '/login.html';
+  document.getElementById('who').textContent = '@' + username;
 
-  function signOut() {
+  document.getElementById('signout-btn').addEventListener('click', () => {
     sessionStorage.removeItem('wsaksham_token');
     sessionStorage.removeItem('wsaksham_username');
     window.location.href = '/login.html';
+  });
+
+  function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str || '';
+    return div.innerHTML;
   }
 
-  document.getElementById('signout-btn').addEventListener('click', signOut);
+  /* --- Toasts (replaces alert()) --- */
+  function toast(message, type = 'ok', timeoutMs = 4200) {
+    const stack = document.getElementById('toast-stack');
+    const el = document.createElement('div');
+    el.className = `toast ${type === 'ok' ? '' : type}`;
+    el.innerHTML = `<div class="toast-body">${escapeHtml(message)}</div><span class="toast-close" aria-label="Dismiss">×</span>`;
+    stack.appendChild(el);
+
+    const remove = () => {
+      el.classList.add('leaving');
+      setTimeout(() => el.remove(), 180);
+    };
+    el.querySelector('.toast-close').addEventListener('click', remove);
+    if (timeoutMs) setTimeout(remove, timeoutMs);
+  }
+
+  /* --- Mobile nav --- */
+  const menuBtn = document.getElementById('menu-btn');
+  const headerCollapse = document.getElementById('header-collapse');
+  menuBtn.addEventListener('click', () => {
+    const isOpen = headerCollapse.classList.toggle('open');
+    menuBtn.setAttribute('aria-expanded', String(isOpen));
+  });
+  document.getElementById('mobile-sos-fab').addEventListener('click', () => {
+    document.querySelector('.sos-panel').scrollIntoView({ behavior: 'smooth', block: 'center' });
+  });
 
   function renderAlert(a) {
     const sev = a.severity || 'medium';
@@ -251,8 +386,8 @@
     const coords = a.location && a.location.coordinates ? a.location.coordinates : [null, null];
     const time = a.createdAt ? new Date(a.createdAt).toLocaleTimeString() : '';
     return `
-      <div class="alert-row ${sev}">
-        <div class="alert-title">${escapeHtml(a.title)} <span class="sev-badge ${sev}">${sev}</span></div>
+      <div class="alert-row ${sev} row-enter">
+        <div class="alert-title">${escapeHtml(a.title)} <span class="badge ${sev}">${sev}</span></div>
         <div class="alert-desc">${escapeHtml(a.description)}</div>
         <div class="alert-meta">
           <span>${escapeHtml(category)}</span>
@@ -263,41 +398,42 @@
       </div>`;
   }
 
-  function escapeHtml(str) {
-    const div = document.createElement('div');
-    div.textContent = str || '';
-    return div.innerHTML;
+  function renderSkeleton() {
+    return '<div class="skeleton skeleton-row"></div>'.repeat(4);
   }
 
+  let feedLoadedOnce = false;
+
   async function loadFeed() {
+    const feed = document.getElementById('feed');
+    if (!feedLoadedOnce) feed.innerHTML = renderSkeleton();
+
     try {
       const res = await fetch('/debug/alerts');
       const alerts = await res.json();
-      const feed = document.getElementById('feed');
+      feedLoadedOnce = true;
       if (!alerts.length) {
-        feed.innerHTML = '<div class="empty">No alerts yet</div>';
+        feed.innerHTML = '<div class="empty">No alerts yet — reports and SOS pings will show up here in real time.</div>';
         return;
       }
       feed.innerHTML = alerts.map(renderAlert).join('');
     } catch (err) {
-      document.getElementById('feed').innerHTML = '<div class="empty">Could not load alerts</div>';
+      feed.innerHTML = '<div class="empty">Could not load alerts. Check your connection and try again.</div>';
     }
   }
 
-  async function sendAlert(payload) {
-    const res = await fetch('/api/v1/alerts', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      },
-      body: JSON.stringify(payload)
+  async function apiCall(method, url, body) {
+    const res = await fetch(url, {
+      method,
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+      body: body ? JSON.stringify(body) : undefined
     });
     const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Failed to send alert');
+    if (!res.ok) throw new Error(data.error || 'Request failed');
     return data;
   }
 
+  /* --- SOS --- */
   document.getElementById('sos-btn').addEventListener('click', () => {
     const btn = document.getElementById('sos-btn');
     const status = document.getElementById('sos-status');
@@ -308,7 +444,7 @@
 
     function fire(lat, lng) {
       btn.textContent = 'Sending SOS…';
-      sendAlert({
+      apiCall('POST', '/api/v1/alerts', {
         title: 'SOS — immediate help needed',
         description: `SOS triggered by ${username}`,
         category: 'sos',
@@ -318,10 +454,12 @@
       }).then(() => {
         status.textContent = 'SOS sent — your location is now visible on the live map.';
         status.className = 'sos-status ok';
+        toast('SOS sent. Live on the dispatch feed and map now.', 'ok');
         loadFeed();
       }).catch((err) => {
         status.textContent = err.message;
         status.className = 'sos-status error';
+        toast(err.message, 'error');
       }).finally(() => {
         btn.disabled = false;
         btn.textContent = 'Send SOS now';
@@ -342,6 +480,7 @@
     }
   });
 
+  /* --- Incident report --- */
   document.getElementById('alert-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     const btn = document.getElementById('submit-btn');
@@ -358,36 +497,160 @@
     };
 
     try {
-      await sendAlert(payload);
+      await apiCall('POST', '/api/v1/alerts', payload);
       document.getElementById('alert-form').reset();
       document.getElementById('severity').value = 'medium';
+      toast('Incident report submitted.', 'ok');
       setTimeout(loadFeed, 800);
     } catch (err) {
-      alert(err.message || 'Could not reach the server');
+      toast(err.message || 'Could not reach the server', 'error');
     } finally {
       btn.disabled = false;
       btn.textContent = 'Submit report';
     }
   });
 
+  /* --- Journey tracking --- */
+  let activeJourney = null;
+  let watchId = null;
+
+  function setJourneyUi(journey) {
+    activeJourney = journey;
+    const idle = document.getElementById('journey-idle');
+    const active = document.getElementById('journey-active');
+    const banner = document.getElementById('journey-banner');
+
+    if (!journey || journey.status === 'completed' || journey.status === 'cancelled') {
+      idle.classList.remove('hide');
+      active.classList.remove('show');
+      banner.classList.remove('show');
+      return;
+    }
+
+    idle.classList.add('hide');
+    active.classList.add('show');
+
+    const pulse = document.getElementById('journey-pulse');
+    const label = document.getElementById('journey-status-label');
+    pulse.className = 'pulse-dot' + (journey.status === 'active' ? ' live' : journey.status === 'deviated' ? ' critical' : ' warn');
+
+    if (journey.status === 'deviated') {
+      label.textContent = 'Off planned route';
+      banner.textContent = 'You appear to have moved off the planned route. If this is expected, keep going — this clears automatically once you return to the corridor.';
+      banner.classList.add('show');
+    } else if (journey.status === 'unresponsive') {
+      label.textContent = 'No recent location update';
+      banner.textContent = 'No location update received recently. Trusted contacts have been notified.';
+      banner.classList.add('show');
+    } else {
+      label.textContent = 'Tracking active';
+      banner.classList.remove('show');
+    }
+  }
+
+  function updateJourneyMeta(distanceMeters) {
+    const meta = document.getElementById('journey-status-meta');
+    if (typeof distanceMeters === 'number') {
+      meta.textContent = `${Math.round(distanceMeters)}m from planned route`;
+    }
+  }
+
+  async function checkExistingJourney() {
+    try {
+      const data = await apiCall('GET', '/api/v1/journeys/active');
+      if (data.journey) {
+        setJourneyUi(data.journey);
+        startWatching();
+      }
+    } catch (err) { /* no active journey */ }
+  }
+
+  document.getElementById('journey-start-btn').addEventListener('click', async () => {
+    const btn = document.getElementById('journey-start-btn');
+    const destLat = parseFloat(document.getElementById('j-dest-lat').value);
+    const destLng = parseFloat(document.getElementById('j-dest-lng').value);
+    const label = document.getElementById('j-label').value.trim();
+
+    if (isNaN(destLat) || isNaN(destLng)) { toast('Enter a destination latitude and longitude first.', 'warn'); return; }
+    if (!navigator.geolocation) { toast('Location is not available in this browser.', 'error'); return; }
+
+    btn.disabled = true;
+    btn.textContent = 'Getting your location…';
+
+    navigator.geolocation.getCurrentPosition(async (pos) => {
+      try {
+        const data = await apiCall('POST', '/api/v1/journeys', {
+          startLatitude: pos.coords.latitude,
+          startLongitude: pos.coords.longitude,
+          endLatitude: destLat,
+          endLongitude: destLng,
+          label: label || undefined
+        });
+        setJourneyUi(data.journey);
+        startWatching();
+        toast('Journey started — tracking your route now.', 'ok');
+      } catch (err) {
+        toast(err.message, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Start journey';
+      }
+    }, () => {
+      toast('Location permission is needed to start a journey.', 'error');
+      btn.disabled = false;
+      btn.textContent = 'Start journey';
+    });
+  });
+
+  document.getElementById('journey-stop-btn').addEventListener('click', async () => {
+    if (!activeJourney) return;
+    try { await apiCall('POST', `/api/v1/journeys/${activeJourney.journeyId}/complete`); } catch (err) {}
+    stopWatching();
+    setJourneyUi(null);
+    toast('Journey ended.', 'ok');
+  });
+
+  function startWatching() {
+    if (watchId !== null || !navigator.geolocation) return;
+    watchId = navigator.geolocation.watchPosition(async (pos) => {
+      if (!activeJourney) return;
+      try {
+        const result = await apiCall('PATCH', `/api/v1/journeys/${activeJourney.journeyId}/location`, {
+          latitude: pos.coords.latitude, longitude: pos.coords.longitude
+        });
+        const previousStatus = activeJourney.status;
+        activeJourney.status = result.status;
+        setJourneyUi(activeJourney);
+        updateJourneyMeta(result.distanceFromRouteMeters);
+        if (previousStatus === 'active' && result.status === 'deviated') {
+          toast('Route deviation detected — this has been logged and risk-scored.', 'warn', 6000);
+        }
+        if (previousStatus !== 'active' && result.status === 'active') {
+          toast('Back on route.', 'ok');
+        }
+      } catch (err) { console.warn('Location ping failed:', err.message); }
+    }, (err) => console.warn('Location watch error:', err.message),
+       { enableHighAccuracy: true, maximumAge: 10000, timeout: 15000 });
+  }
+
+  function stopWatching() {
+    if (watchId !== null) { navigator.geolocation.clearWatch(watchId); watchId = null; }
+  }
+
+  /* --- Live status --- */
   function connectLiveStatus() {
     const dot = document.getElementById('live-dot');
     const label = document.getElementById('live-label');
     const socket = new WebSocket(`ws://${window.location.host}`);
 
-    socket.onopen = () => {
-      dot.classList.add('live');
-      label.textContent = 'Live';
-    };
+    socket.onopen = () => { dot.classList.add('live'); label.textContent = 'Live'; };
     socket.onmessage = () => loadFeed();
-    socket.onclose = () => {
-      dot.classList.remove('live');
-      label.textContent = 'Disconnected';
-    };
+    socket.onclose = () => { dot.classList.remove('live'); label.textContent = 'Disconnected'; };
   }
 
   loadFeed();
   connectLiveStatus();
+  checkExistingJourney();
 </script>
 </body>
 </html>
