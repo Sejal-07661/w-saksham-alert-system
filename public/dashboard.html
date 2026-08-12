@@ -314,6 +314,12 @@
           <button class="btn btn-ghost" id="journey-stop-btn">Stop</button>
         </div>
         <div class="journey-banner" id="journey-banner"></div>
+        <!-- DEV ONLY: remove before shipping. Lets you trigger a deviation
+             without walking 3km away from your laptop or fighting DevTools
+             Sensors — useful for demos/interviews too. -->
+        <button class="btn btn-ghost" id="journey-simulate-btn" style="margin-top:4px; font-size:11.5px;">
+          Simulate off-route ping (dev)
+        </button>
       </div>
     </div>
 
@@ -636,6 +642,29 @@
   function stopWatching() {
     if (watchId !== null) { navigator.geolocation.clearWatch(watchId); watchId = null; }
   }
+
+  /* --- DEV ONLY: simulate an off-route ping without real GPS movement.
+     Remove this block (and the button in the HTML above) before treating
+     the project as "done" — it's a testing convenience, not a real feature. --- */
+  document.getElementById('journey-simulate-btn').addEventListener('click', async () => {
+    if (!activeJourney) return;
+    try {
+      const result = await apiCall('PATCH', `/api/v1/journeys/${activeJourney.journeyId}/location`, {
+        latitude: 21.1700, longitude: 79.1200
+      });
+      const previousStatus = activeJourney.status;
+      activeJourney.status = result.status;
+      setJourneyUi(activeJourney);
+      updateJourneyMeta(result.distanceFromRouteMeters);
+      if (previousStatus === 'active' && result.status === 'deviated') {
+        toast('Route deviation detected — this has been logged and risk-scored.', 'warn', 6000);
+      } else if (result.status === 'active') {
+        toast('Simulated ping was on-route — no deviation triggered.', 'ok');
+      }
+    } catch (err) {
+      toast(err.message, 'error');
+    }
+  });
 
   /* --- Live status --- */
   function connectLiveStatus() {
