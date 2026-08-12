@@ -33,8 +33,9 @@ app.use(
       directives: {
         defaultSrc: ["'self'"],
         scriptSrc: ["'self'", "https://unpkg.com", "'unsafe-inline'"],
-        styleSrc: ["'self'", "https://unpkg.com", "'unsafe-inline'"],
-        imgSrc: ["'self'", "data:", "https://*.tile.openstreetmap.org"],
+        styleSrc: ["'self'", "https://unpkg.com", "https://fonts.googleapis.com", "'unsafe-inline'"],
+        fontSrc: ["'self'", "https://fonts.gstatic.com"],
+        imgSrc: ["'self'", "data:", "https://*.basemaps.cartocdn.com", "https://*.tile.openstreetmap.org"],
         connectSrc: ["'self'", "ws://localhost:3000"],
       },
     },
