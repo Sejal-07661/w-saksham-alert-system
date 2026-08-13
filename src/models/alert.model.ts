@@ -1,6 +1,6 @@
 import mongoose, { Schema, Document } from "mongoose";
 
-export type AlertStatus = "pending" | "processing" | "escalated" | "resolved";
+export type AlertStatus = "pending" | "acknowledged" | "processing" | "escalated" | "resolved";
 export type AlertSeverity = "low" | "medium" | "high" | "critical";
 export type AlertCategory = "sos" | "harassment" | "stalking" | "unsafe_area" | "medical" | "route_deviation" | "other";
 export type UrgencyLabel = "low" | "medium" | "high" | "critical";
@@ -41,7 +41,7 @@ const alertSchema = new Schema<IAlert>(
     },
     status: {
       type: String,
-      enum: ["pending", "processing", "escalated", "resolved"],
+      enum: ["pending", "acknowledged", "processing", "escalated", "resolved"],
       default: "pending",
     },
     location: {

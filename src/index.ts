@@ -18,6 +18,7 @@ import contactsRouter from "./api/v1/contacts.routes";
 import { startNotificationWorker } from "./workers/notification.worker";
 import journeysRouter from "./api/v1/journeys.routes";
 import { checkStaleJourneys } from "./services/journey.service";
+import adminRouter from "./api/v1/admin.routes";
  
 const app = express();
  
@@ -90,6 +91,7 @@ app.use("/api/v1/auth", authRouter);
 app.use("/api/v1/geo", geoRouter);
 app.use("/api/v1/contacts", contactsRouter);
 app.use("/api/v1/journeys", journeysRouter);
+app.use("/api/v1/admin", adminRouter);
 app.use(express.static(path.join(__dirname, "../public")));
  
 const server = http.createServer(app);
