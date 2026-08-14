@@ -97,6 +97,8 @@
   }
   .signout { color: var(--signal-critical); cursor: pointer; font-size: 13px; font-weight: 500; }
   .signout:hover { text-decoration: underline; }
+  .back-link { color: var(--signal-safe); font-size: 13px; text-decoration: none; font-weight: 500; }
+  .back-link:hover { text-decoration: underline; }
 
   main {
     max-width: 1180px;
@@ -219,6 +221,7 @@
       <span class="mono-label" id="live-label">Connecting…</span>
     </div>
     <div class="user-info">
+      <a class="back-link" href="/admin.html" id="admin-link" style="display:none;">Admin console →</a>
       <span class="username-pill" id="who"></span>
       <span class="signout" id="signout-btn">Sign out</span>
     </div>
@@ -346,6 +349,16 @@
 
   if (!token) window.location.href = '/login.html';
   document.getElementById('who').textContent = '@' + username;
+
+  // Client-side JWT decode purely to show/hide the admin link — a UX nicety,
+  // not a security boundary. The real gate is server-side requireRole on
+  // every /api/v1/admin/* route; this can't be trusted on its own.
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    if (payload.role === 'admin') {
+      document.getElementById('admin-link').style.display = 'inline';
+    }
+  } catch (e) { /* malformed token, ignore — requireAuth will catch it server-side */ }
 
   document.getElementById('signout-btn').addEventListener('click', () => {
     sessionStorage.removeItem('wsaksham_token');
