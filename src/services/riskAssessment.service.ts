@@ -32,7 +32,7 @@ Be decisive. Never return a score of exactly 0 or refuse to answer — always pr
  
 // Fallback used only if the Groq API call fails (network issue, rate limit, etc.)
 // — ingestion and persistence must never be blocked by an AI provider outage.
-function fallbackAssessment(input: RiskAssessmentInput): RiskAssessmentResult {
+export function fallbackAssessment(input: RiskAssessmentInput): RiskAssessmentResult {
   const categoryBase: Record<string, number> = {
     sos: 90,
     medical: 80,
