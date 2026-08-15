@@ -28,28 +28,25 @@ jobs:
   deploy:
     needs: test
     runs-on: ubuntu-latest
+    env:
+      HOST: 16.171.134.30
+      USERNAME: ubuntu
+      APP_DIR: /home/ubuntu/w-saksham-alert-system
     steps:
       - name: Set up SSH key
         run: |
           mkdir -p ~/.ssh
           echo "${{ secrets.EC2_SSH_KEY }}" | tr -d '\r' > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
-          ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
+          ssh-keyscan -H $HOST >> ~/.ssh/known_hosts
 
-      - name: Debug key fingerprint
-        run: |
-          echo "Key line count:"
-          wc -l ~/.ssh/deploy_key
-          echo "Key fingerprint:"
-          ssh-keygen -lf ~/.ssh/deploy_key
-          echo "Target host and user:"
-          echo "HOST=[${{ secrets.EC2_HOST }}]"
-          echo "USER=[${{ secrets.EC2_USER }}]"
+      - name: Confirm target
+        run: echo "Connecting to $USERNAME@$HOST"
 
       - name: Deploy to EC2
         run: |
-          ssh -v -i ~/.ssh/deploy_key ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} "
-            cd ${{ secrets.EC2_APP_DIR }} &&
+          ssh -v -i ~/.ssh/deploy_key $USERNAME@$HOST "
+            cd $APP_DIR &&
             git pull origin main &&
             npm ci &&
             npm run build &&
