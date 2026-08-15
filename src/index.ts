@@ -38,8 +38,12 @@ app.use(
         fontSrc: ["'self'", "https://fonts.gstatic.com"],
         imgSrc: ["'self'", "data:", "https://*.basemaps.cartocdn.com", "https://*.tile.openstreetmap.org"],
         connectSrc: ["'self'", "ws://localhost:3000"],
+        // TEMPORARY: disabled until HTTPS is configured on the server.
+        // Re-enable both once a real SSL cert is in place (see README).
+        upgradeInsecureRequests: null,
       },
     },
+    hsts: false,   // TEMPORARY — re-enable once HTTPS is configured
   })
 );
  
@@ -92,6 +96,11 @@ app.use("/api/v1/geo", geoRouter);
 app.use("/api/v1/contacts", contactsRouter);
 app.use("/api/v1/journeys", journeysRouter);
 app.use("/api/v1/admin", adminRouter);
+
+app.get("/", (req, res) => {
+  res.redirect("/login.html");
+});
+
 app.use(express.static(path.join(__dirname, "../public")));
  
 const server = http.createServer(app);
