@@ -36,9 +36,19 @@ jobs:
           chmod 600 ~/.ssh/deploy_key
           ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
 
+      - name: Debug key fingerprint
+        run: |
+          echo "Key line count:"
+          wc -l ~/.ssh/deploy_key
+          echo "Key fingerprint:"
+          ssh-keygen -lf ~/.ssh/deploy_key
+          echo "Target host and user:"
+          echo "HOST=[${{ secrets.EC2_HOST }}]"
+          echo "USER=[${{ secrets.EC2_USER }}]"
+
       - name: Deploy to EC2
         run: |
-          ssh -i ~/.ssh/deploy_key ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} "
+          ssh -v -i ~/.ssh/deploy_key ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} "
             cd ${{ secrets.EC2_APP_DIR }} &&
             git pull origin main &&
             npm ci &&
