@@ -1,3 +1,4 @@
 node_modules/
 dist/
-.envwsaksham-deploy-key* 
+.env
+wsaksham-deploy-key*
