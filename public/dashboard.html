@@ -286,6 +286,27 @@
     </div>
 
     <div class="panel">
+      <h2>Trusted contacts</h2>
+      <p class="sos-copy">Up to 5 people who get an email with your location if an alert you raise escalates to high risk.</p>
+
+      <form id="contact-form" style="margin-top:14px; display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap;">
+        <div class="field" style="flex:1; min-width:140px;">
+          <label for="contact-name">Name</label>
+          <input id="contact-name" required maxlength="100" placeholder="e.g. Mom" />
+        </div>
+        <div class="field" style="flex:1; min-width:180px;">
+          <label for="contact-email">Email</label>
+          <input id="contact-email" type="email" required maxlength="200" placeholder="name@example.com" />
+        </div>
+        <button class="btn btn-primary" type="submit" id="contact-add-btn" style="height:42px;">Add</button>
+      </form>
+
+      <div class="contact-list" id="contact-list" style="margin-top:16px;">
+        <div class="empty">Loading contacts…</div>
+      </div>
+    </div>
+
+    <div class="panel">
       <h2>Journey tracking</h2>
       <p class="sos-copy">Set a destination and W-Saksham watches your route. Drift off path or go silent, and it escalates automatically.</p>
 
@@ -445,6 +466,68 @@
     if (!res.ok) throw new Error(data.error || 'Request failed');
     return data;
   }
+
+  /* --- Trusted contacts --- */
+  function renderContacts(contacts) {
+    const list = document.getElementById('contact-list');
+    if (!contacts || !contacts.length) {
+      list.innerHTML = '<div class="empty">No trusted contacts yet — add one above.</div>';
+      return;
+    }
+    list.innerHTML = contacts.map(c => `
+      <div class="journey-status-row" style="margin-bottom:8px;">
+        <div>
+          <div class="journey-label">${escapeHtml(c.name)}</div>
+          <div class="journey-meta">${escapeHtml(c.email)}</div>
+        </div>
+        <button class="btn btn-ghost contact-remove-btn" data-email="${escapeHtml(c.email)}">Remove</button>
+      </div>`).join('');
+
+    list.querySelectorAll('.contact-remove-btn').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        btn.disabled = true;
+        try {
+          const data = await apiCall('DELETE', `/api/v1/contacts/${encodeURIComponent(btn.dataset.email)}`);
+          renderContacts(data.contacts);
+          toast('Contact removed.', 'ok');
+        } catch (err) {
+          toast(err.message, 'error');
+          btn.disabled = false;
+        }
+      });
+    });
+  }
+
+  async function loadContacts() {
+    try {
+      const data = await apiCall('GET', '/api/v1/contacts');
+      renderContacts(data.contacts);
+    } catch (err) {
+      document.getElementById('contact-list').innerHTML = '<div class="empty">Could not load contacts.</div>';
+    }
+  }
+
+  document.getElementById('contact-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('contact-add-btn');
+    const name = document.getElementById('contact-name').value.trim();
+    const email = document.getElementById('contact-email').value.trim();
+    btn.disabled = true;
+    btn.textContent = 'Adding…';
+    try {
+      const data = await apiCall('POST', '/api/v1/contacts', { name, email });
+      renderContacts(data.contacts);
+      document.getElementById('contact-form').reset();
+      toast('Trusted contact added.', 'ok');
+    } catch (err) {
+      toast(err.message, 'error');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Add';
+    }
+  });
+
+  loadContacts();
 
   /* --- SOS --- */
   document.getElementById('sos-btn').addEventListener('click', () => {
